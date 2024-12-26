@@ -136,18 +136,34 @@ class HBNBCommand(cmd.Cmd):
             print("** class doesn't exist **")
             return
 
-        # Create instance of the specified class
+        # Create an instance of the specified class
         new_instance = HBNBCommand.classes[class_name]()
 
         # Parse attributes from the remaining arguments
         for param in args[1:]:
             if "=" not in param:
                 continue
+
             key, value = param.split("=", 1)
 
             # Handle string values
             if value.startswith('"') and value.endswith('"'):
-                value = value[1:-1].replace("_", " ").replace('\\"', '"')
+                # Extract the inner value between quotes
+                temp_value = value[1:-1]
+               
+                # skips if value contain a space
+                if ' ' in temp_value:
+                    continue
+
+                # Handle escaped quotes and underscores
+                temp_value = temp_value.replace("_", " ").replace('\\"', '"')
+
+                # skips if value contains a "  whithout the scape character '\'
+                if '"' in temp_value:
+                    continue
+
+                # Assign temp_value back to value
+                value = temp_value
             elif "." in value:  # Handle floats
                 try:
                     value = float(value)
