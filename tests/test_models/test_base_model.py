@@ -21,12 +21,6 @@ class test_basemodel(unittest.TestCase):
         """ """
         pass
 
-    def tearDown(self):
-        try:
-            os.remove('file.json')
-        except e:
-            pass
-
     def test_default(self):
         """ """
         i = self.value()
