@@ -150,7 +150,7 @@ class HBNBCommand(cmd.Cmd):
             if value.startswith('"') and value.endswith('"'):
                 # Extract the inner value between quotes
                 temp_value = value[1:-1]
-               
+
                 # skips if value contain a space
                 if ' ' in temp_value:
                     continue
