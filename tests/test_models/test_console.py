@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 """Unit tests for the HBNB command interpreter."""
+
 import unittest
 from io import StringIO
 from unittest.mock import patch
@@ -37,18 +38,18 @@ class TestHBNBCommand(unittest.TestCase):
         storage.save()
 
     def test_create(self):
-        """Test create command."""
-        # Test create without class name
+        """test create command."""
+        # test create without class name
         with patch("sys.stdout", new=StringIO()) as f:
             self.console.onecmd("create")
             self.assertEqual("** class name missing **", f.getvalue().strip())
 
-        # Test create with invalid class name
+        # test create with invalid class name
         with patch("sys.stdout", new=StringIO()) as f:
-            self.console.onecmd("create InvalidClass")
+            self.console.onecmd("create invalidclass")
             self.assertEqual("** class doesn't exist **", f.getvalue().strip())
 
-        # Test create with valid class names
+        # test create with valid class names
         for class_name in self.classes:
             with patch("sys.stdout", new=StringIO()) as f:
                 self.console.onecmd(f"create {class_name}")
