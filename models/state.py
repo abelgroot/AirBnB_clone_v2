@@ -19,7 +19,8 @@ class State(BaseModel, Base):
     
     def __str__(self):
         """String representation of the State instance"""
-        dict_repr = self.to_dict()
+        dict_repr =  self.__dict__.copy()
         dict_repr.pop("__class__", None)  # Remove the `__class__` key
+        dict_repr.pop("_sa_instance_state", None)  # Remove the `_sa_instance_state` key
         return "[{}] ({}) {}".format(self.__class__.__name__, self.id,dict_repr)
 
