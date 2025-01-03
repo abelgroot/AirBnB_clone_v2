@@ -10,9 +10,16 @@ class State(BaseModel, Base):
     __tablename__ = 'states'
     name = Column(String(128), nullable=False)
     cities = relationship('City', back_populates='states', cascade="all, delete")
+
     @property
     def cities(self):
       from models.city import City
       all_cities = storage.all()
       return [city for city in all_cities.values() if city.state_id == self.id]
+    
+    def __str__(self):
+        """String representation of the State instance"""
+        dict_repr = self.to_dict()
+        dict_repr.pop("__class__", None)  # Remove the `__class__` key
+        return "[{}] ({}) {}".format(self.__class__.__name__, self.id,dict_repr)
 

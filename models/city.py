@@ -10,3 +10,9 @@ class City(BaseModel, Base):
     state_id = Column(String(60), ForeignKey('states.id'),  nullable=False, )
     name = Column(String(128), nullable=False)
     state = relationship("State", backref="cities", cascade="all, delete")
+    def __str__(self):
+        """String representation of the State instance"""
+        dict_repr = self.to_dict()
+        dict_repr.pop("__class__", None)  # Remove the `__class__` key
+        return "[{}] ({}) {}".format(self.__class__.__name__, self.id,dict_repr)
+
