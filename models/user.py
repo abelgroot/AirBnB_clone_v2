@@ -12,3 +12,7 @@ class User(BaseModel, Base):
     password = Column(String(128), nullable=False)
     first_name = Column(String(128), nullable=False)
     last_name = Column(String(128), nullable=False)
+    def __str__(self):
+        dict_copy = self.__dict__.copy()
+        dict_copy.pop('_sa_instance_state', None)
+        return f"[User] ({self.id}) {dict_copy}"
