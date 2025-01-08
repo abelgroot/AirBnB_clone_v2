@@ -17,4 +17,6 @@ class State(BaseModel, Base):
         all_cities = storage.all()
         return [city for city in all_cities.values() if city.state_id == self.id]
     def __str__(self):
-        return f"[State] ({self.id}) {self.__dict__}"
+        dict_copy = self.__dict__.copy()
+        dict_copy.pop('_sa_instance_state', None)
+        return f"[State] ({self.id}) {dict_copy}"
