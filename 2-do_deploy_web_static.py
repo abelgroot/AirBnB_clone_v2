@@ -5,7 +5,6 @@ Fabric script that distributes an archive to your web servers.
 
 from fabric.api import env, put, run, sudo
 from os.path import exists
-from fabric.exceptions import CommandTimeout
 
 # Define the list of web servers
 env.hosts = ['3.85.136.194', '54.90.0.18']  # Updated IP addresses
@@ -35,9 +34,8 @@ def do_deploy(archive_path):
         print(f"Checking if {remote_tmp_path} already exists...")
         try:
             run(f"test -e {remote_tmp_path}")
-            print(f"Archive {remote_tmp_path} already \
-                    exists. Skipping upload.")
-        except Exception:
+            print(f"Archive {remote_tmp_path} already exists. Skipping upload.")
+        except:
             # Upload the archive to the /tmp/ directory on the web server
             print(f"Uploading {archive_path} to {remote_tmp_path}...")
             if not put(archive_path, remote_tmp_path).succeeded:
@@ -69,8 +67,7 @@ def do_deploy(archive_path):
         # Remove existing directories if they exist
         sudo(f"rm -rf {release_path}/images")
         sudo(f"rm -rf {release_path}/styles")
-        if not sudo(f"mv {release_path}/web_static/* \
-                {release_path}/").succeeded:
+        if not sudo(f"mv {release_path}/web_static/* {release_path}/").succeeded:
             print(f"Error: Failed to move contents to {release_path}.")
             return False
 
@@ -88,8 +85,7 @@ def do_deploy(archive_path):
 
         # Create a new symbolic link to the new release using sudo
         print(f"Creating new symbolic link /data/web_static/current...")
-        if not sudo(f"ln -s {release_path} \
-                /data/web_static/current").succeeded:
+        if not sudo(f"ln -s {release_path} /data/web_static/current").succeeded:
             print(f"Error: Failed to create new symbolic link.")
             return False
 
