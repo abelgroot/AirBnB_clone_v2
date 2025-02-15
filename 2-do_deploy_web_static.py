@@ -5,6 +5,7 @@ Fabric script that distributes an archive to your web servers.
 
 from fabric.api import env, put, run, sudo
 from os.path import exists
+from fabric.exceptions import CommandTimeout
 
 # Define the list of web servers
 env.hosts = ['3.85.136.194', '54.90.0.18']  # Updated IP addresses
@@ -13,8 +14,10 @@ env.hosts = ['3.85.136.194', '54.90.0.18']  # Updated IP addresses
 def do_deploy(archive_path):
     """
     Distributes an archive to the web servers.
+
     Args:
         archive_path (str): Path to the archive file.
+
     Returns:
         bool: True if all operations are successful, otherwise False.
     """
@@ -30,15 +33,17 @@ def do_deploy(archive_path):
 
         # Check if the archive already exists on the server
         print(f"Checking if {remote_tmp_path} already exists...")
-        if run(f"test -e {remote_tmp_path}", warn_only=True).failed:
-            print(f"Uploading {archive_path} to {remote_tmp_path}...")
-            if not put(archive_path, remote_tmp_path).succeeded:
-                print(f"Error: Failed to upload {archive_path} \
-                        to {remote_tmp_path}.")
-                return False
-        else:
+        try:
+            run(f"test -e {remote_tmp_path}")
             print(f"Archive {remote_tmp_path} already \
                     exists. Skipping upload.")
+        except Exception:
+            # Upload the archive to the /tmp/ directory on the web server
+            print(f"Uploading {archive_path} to {remote_tmp_path}...")
+            if not put(archive_path, remote_tmp_path).succeeded:
+                print(f"Error: Failed to upload {archive_path} to "
+                      f"{remote_tmp_path}.")
+                return False
 
         # Create the target directory for the release using sudo
         release_path = f"/data/web_static/releases/{archive_name}"
@@ -49,9 +54,7 @@ def do_deploy(archive_path):
 
         # Uncompress the archive to the release directory using sudo
         print(f"Uncompressing {remote_tmp_path} to {release_path}...")
-        if not sudo(
-            f"tar -xzf {remote_tmp_path} -C {release_path}"
-        ).succeeded:
+        if not sudo(f"tar -xzf {remote_tmp_path} -C {release_path}").succeeded:
             print(f"Error: Failed to uncompress {remote_tmp_path}.")
             return False
 
@@ -63,11 +66,11 @@ def do_deploy(archive_path):
 
         # Move the contents of the web_static folder to the release directory
         print(f"Moving contents to {release_path}...")
+        # Remove existing directories if they exist
         sudo(f"rm -rf {release_path}/images")
         sudo(f"rm -rf {release_path}/styles")
-        if not sudo(
-            f"mv {release_path}/web_static/* {release_path}/"
-        ).succeeded:
+        if not sudo(f"mv {release_path}/web_static/* \
+                {release_path}/").succeeded:
             print(f"Error: Failed to move contents to {release_path}.")
             return False
 
@@ -85,9 +88,8 @@ def do_deploy(archive_path):
 
         # Create a new symbolic link to the new release using sudo
         print(f"Creating new symbolic link /data/web_static/current...")
-        if not sudo(
-            f"ln -s {release_path} /data/web_static/current"
-        ).succeeded:
+        if not sudo(f"ln -s {release_path} \
+                /data/web_static/current").succeeded:
             print(f"Error: Failed to create new symbolic link.")
             return False
 
