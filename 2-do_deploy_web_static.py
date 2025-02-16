@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """
-Fabric script that creates and distributes an archive to your web servers and local machine.
+Fabric script that creates and distributes an
+archive to your web servers and local machine.
 """
 
 from fabric.api import env, put, run, local
@@ -11,6 +12,7 @@ from os.path import exists
 env.hosts = ['3.85.136.194', '54.90.0.18']  # Replace with your server IPs
 env.user = "ubuntu"  # Set the SSH username
 env.key_filename = "~/.ssh/school"  # Set the SSH private key path
+
 
 def do_pack():
     """
@@ -44,6 +46,7 @@ def do_pack():
         print(f"An error occurred: {e}")
         return None
 
+
 def do_deploy(archive_path):
     """
     Distributes an archive to the web servers and the local machine.
@@ -68,9 +71,11 @@ def do_deploy(archive_path):
         # Deploy to remote servers
         print(f"Uploading {archive_path} to {remote_tmp_path}...")
         put(archive_path, remote_tmp_path)
-        print(f"Creating release directory {release_path} on remote servers...")
+        print(f"Creating release directory \
+                {release_path} on remote servers...")
         run(f"mkdir -p {release_path}")
-        print(f"Uncompressing {remote_tmp_path} to {release_path} on remote servers...")
+        print(f"Uncompressing {remote_tmp_path} to \
+                {release_path} on remote servers...")
         run(f"tar -xzf {remote_tmp_path} -C {release_path}")
         run(f"rm {remote_tmp_path}")
         run(f"mv -n {release_path}/web_static/* {release_path}/")
@@ -100,6 +105,7 @@ def do_deploy(archive_path):
         print(f"An error occurred: {e}")
         return False
 
+
 def deploy():
     """
     Creates and distributes an archive to the web servers and local machine.
@@ -115,4 +121,3 @@ def deploy():
 
     # Step 2: Deploy the archive to the web servers and local machine
     return do_deploy(archive_path)
-
