@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-Fabric script that creates and distributes an archive to your web servers and local machine.
+Fabric script that creates and distributes an archive to your web servers.
 """
 
 from fabric.api import env, put, run, local
@@ -11,6 +11,7 @@ from os.path import exists
 env.hosts = ['3.85.136.194', '54.90.0.18']  # Replace with your server IPs
 env.user = "ubuntu"  # Set the SSH username
 env.key_filename = "~/.ssh/school"  # Set the SSH private key path
+
 
 def do_pack():
     """
@@ -44,9 +45,10 @@ def do_pack():
         print(f"An error occurred: {e}")
         return None
 
+
 def do_deploy(archive_path):
     """
-    Distributes an archive to the web servers and the local machine.
+    Distributes an archive to the web servers.
 
     Args:
         archive_path (str): Path to the archive file.
@@ -63,46 +65,50 @@ def do_deploy(archive_path):
         archive_filename = archive_path.split('/')[-1]
         archive_name = archive_filename.split('.')[0]
         remote_tmp_path = f"/tmp/{archive_filename}"
-        release_path = f"/data/web_static/releases/{archive_name}"
 
-        # Deploy to remote servers
+        # Upload the archive to the /tmp/ directory on the web server
         print(f"Uploading {archive_path} to {remote_tmp_path}...")
         put(archive_path, remote_tmp_path)
-        print(f"Creating release directory {release_path} on remote servers...")
+
+        # Create the target directory for the release
+        release_path = f"/data/web_static/releases/{archive_name}"
+        print(f"Creating release directory {release_path}...")
         run(f"mkdir -p {release_path}")
-        print(f"Uncompressing {remote_tmp_path} to {release_path} on remote servers...")
+
+        # Uncompress the archive to the release directory
+        print(f"Uncompressing {remote_tmp_path} to {release_path}...")
         run(f"tar -xzf {remote_tmp_path} -C {release_path}")
+
+        # Remove the uploaded archive from the server
+        print(f"Removing {remote_tmp_path}...")
         run(f"rm {remote_tmp_path}")
+
+        # Move the contents of the web_static folder to the release directory
+        print(f"Moving contents to {release_path}...")
         run(f"mv -n {release_path}/web_static/* {release_path}/")
+
+        # Remove the now-empty web_static folder
+        print(f"Removing empty web_static folder...")
         run(f"rm -rf {release_path}/web_static")
+
+        # Delete the old symbolic link
+        print(f"Removing old symbolic link /data/web_static/current...")
         run("rm -rf /data/web_static/current")
+
+        # Create a new symbolic link to the new release
+        print(f"Creating new symbolic link /data/web_static/current...")
         run(f"ln -s {release_path} /data/web_static/current")
-        print("New version deployed successfully to remote servers!")
 
-        # Deploy locally
-        local_release_path = f"/data/web_static/releases/{archive_name}"
-        local_tmp_path = f"/tmp/{archive_filename}"
-
-        print(f"Deploying to local machine at {local_release_path}...")
-        local("mkdir -p /data/web_static/releases")
-        local(f"mkdir -p {local_release_path}")
-        local(f"cp {archive_path} {local_tmp_path}")
-        local(f"tar -xzf {local_tmp_path} -C {local_release_path}")
-        local(f"rm {local_tmp_path}")
-        local(f"mv -n {local_release_path}/web_static/* {local_release_path}/")
-        local(f"rm -rf {local_release_path}/web_static")
-        local("rm -rf /data/web_static/current")
-        local(f"ln -s {local_release_path} /data/web_static/current")
-        print("New version deployed successfully to local machine!")
-
+        print("New version deployed successfully!")
         return True
     except Exception as e:
         print(f"An error occurred: {e}")
         return False
 
+
 def deploy():
     """
-    Creates and distributes an archive to the web servers and local machine.
+    Creates and distributes an archive to the web servers.
 
     Returns:
         bool: True if all operations are successful, otherwise False.
@@ -113,6 +119,5 @@ def deploy():
         print("Failed to create archive.")
         return False
 
-    # Step 2: Deploy the archive to the web servers and local machine
+    # Step 2: Deploy the archive to the web servers
     return do_deploy(archive_path)
-
