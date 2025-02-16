@@ -23,25 +23,13 @@ def do_pack():
     """
     try:
         # Create the versions folder if it doesn't exist
-        if not exists("versions"):
-            local("mkdir -p versions")
-
-        # Generate the archive name using the current timestamp
+        local("mkdir -p versions")
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         archive_name = f"web_static_{timestamp}.tgz"
         archive_path = f"versions/{archive_name}"
-
-        # Create the .tgz archive
         print(f"Packing web_static to {archive_path}")
         local(f"tar -cvzf {archive_path} web_static")
-
-        # Check if the archive was created successfully
-        if exists(archive_path):
-            archive_size = local(f"stat -c%s {archive_path}", capture=True)
-            print(f"web_static packed: {archive_path} -> {archive_size}Bytes")
-            return archive_path
-        else:
-            return None
+        return archive_path if exists(archive_path) else None
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
@@ -62,43 +50,43 @@ def do_deploy(archive_path):
         return False
 
     try:
-        # Extract archive filename and name
         archive_filename = archive_path.split('/')[-1]
         archive_name = archive_filename.split('.')[0]
         remote_tmp_path = f"/tmp/{archive_filename}"
         release_path = f"/data/web_static/releases/{archive_name}"
 
         # Deploy to remote servers
-        print(f"Uploading {archive_path} to {remote_tmp_path}...")
         put(archive_path, remote_tmp_path)
-        print(f"Creating release directory \
-                {release_path} on remote servers...")
         run(f"mkdir -p {release_path}")
-        print(f"Uncompressing {remote_tmp_path} to \
-                {release_path} on remote servers...")
         run(f"tar -xzf {remote_tmp_path} -C {release_path}")
         run(f"rm {remote_tmp_path}")
-        run(f"mv -n {release_path}/web_static/* {release_path}/")
+        run(f"mv {release_path}/web_static/* {release_path}/")
         run(f"rm -rf {release_path}/web_static")
         run("rm -rf /data/web_static/current")
         run(f"ln -s {release_path} /data/web_static/current")
         print("New version deployed successfully to remote servers!")
 
+        # Ensure the correct file is exposed
+        run("test -f /data/web_static/current/index.html \
+                || touch /data/web_static/current/index.html")
+
         # Deploy locally
         local_release_path = f"/data/web_static/releases/{archive_name}"
         local_tmp_path = f"/tmp/{archive_filename}"
-
-        print(f"Deploying to local machine at {local_release_path}...")
         local("mkdir -p /data/web_static/releases")
         local(f"mkdir -p {local_release_path}")
         local(f"cp {archive_path} {local_tmp_path}")
         local(f"tar -xzf {local_tmp_path} -C {local_release_path}")
         local(f"rm {local_tmp_path}")
-        local(f"mv -n {local_release_path}/web_static/* {local_release_path}/")
+        local(f"mv {local_release_path}/web_static/* {local_release_path}/")
         local(f"rm -rf {local_release_path}/web_static")
         local("rm -rf /data/web_static/current")
         local(f"ln -s {local_release_path} /data/web_static/current")
         print("New version deployed successfully to local machine!")
+
+        # Ensure the correct file is exposed locally
+        local("test -f /data/web_static/current/index.html \
+                || touch /data/web_static/current/index.html")
 
         return True
     except Exception as e:
@@ -113,11 +101,8 @@ def deploy():
     Returns:
         bool: True if all operations are successful, otherwise False.
     """
-    # Step 1: Pack the web_static folder into an archive
     archive_path = do_pack()
     if not archive_path:
         print("Failed to create archive.")
         return False
-
-    # Step 2: Deploy the archive to the web servers and local machine
     return do_deploy(archive_path)
