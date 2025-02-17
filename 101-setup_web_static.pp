@@ -5,12 +5,44 @@ package { 'nginx':
   ensure => installed,
 }
 
-# Create necessary directories
-file { ['/data', '/data/web_static', '/data/web_static/releases', '/data/web_static/shared', '/data/web_static/releases/test']:
+# Create necessary directories with correct ownership and permissions
+file { '/data':
   ensure => directory,
   owner  => 'ubuntu',
   group  => 'ubuntu',
   mode   => '0755',
+}
+
+file { '/data/web_static':
+  ensure => directory,
+  owner  => 'ubuntu',
+  group  => 'ubuntu',
+  mode   => '0755',
+  require => File['/data'],
+}
+
+file { '/data/web_static/releases':
+  ensure => directory,
+  owner  => 'ubuntu',
+  group  => 'ubuntu',
+  mode   => '0755',
+  require => File['/data/web_static'],
+}
+
+file { '/data/web_static/shared':
+  ensure => directory,
+  owner  => 'ubuntu',
+  group  => 'ubuntu',
+  mode   => '0755',
+  require => File['/data/web_static'],
+}
+
+file { '/data/web_static/releases/test':
+  ensure => directory,
+  owner  => 'ubuntu',
+  group  => 'ubuntu',
+  mode   => '0755',
+  require => File['/data/web_static/releases'],
 }
 
 # Create a fake HTML file for testing
@@ -20,6 +52,7 @@ file { '/data/web_static/releases/test/index.html':
   owner   => 'ubuntu',
   group   => 'ubuntu',
   mode    => '0644',
+  require => File['/data/web_static/releases/test'],
 }
 
 # Create or recreate the symbolic link
@@ -28,6 +61,7 @@ file { '/data/web_static/current':
   target => '/data/web_static/releases/test',
   owner  => 'ubuntu',
   group  => 'ubuntu',
+  require => File['/data/web_static/releases/test/index.html'],
 }
 
 # Update the Nginx configuration to serve the content of /data/web_static/current/
@@ -36,6 +70,7 @@ file_line { 'nginx_hbnb_static_config':
   path    => '/etc/nginx/sites-available/default',
   line    => '    location /hbnb_static/ {',
   after   => 'listen 80 default_server;',
+  notify  => Service['nginx'],
 }
 
 file_line { 'nginx_hbnb_static_alias':
@@ -43,6 +78,7 @@ file_line { 'nginx_hbnb_static_alias':
   path    => '/etc/nginx/sites-available/default',
   line    => '        alias /data/web_static/current/;',
   after   => '    location /hbnb_static/ {',
+  notify  => Service['nginx'],
 }
 
 file_line { 'nginx_hbnb_static_close':
@@ -50,11 +86,11 @@ file_line { 'nginx_hbnb_static_close':
   path    => '/etc/nginx/sites-available/default',
   line    => '    }',
   after   => '        alias /data/web_static/current/;',
+  notify  => Service['nginx'],
 }
 
 # Restart Nginx to apply the changes
 service { 'nginx':
   ensure    => running,
   enable    => true,
-  subscribe => File_line['nginx_hbnb_static_close'],
-}
+  require   => Package['nginx'],
