@@ -1,5 +1,6 @@
 #!/usr/bin/python3
-""" Console Module """
+"""Console Module"""
+
 import cmd
 import sys
 
@@ -62,12 +63,12 @@ class HBNBCommand(cmd.Cmd):
             _cls = pline[: pline.find(".")]
 
             # isolate and validate <command>
-            _cmd = pline[pline.find(".") + 1:pline.find("(")]
+            _cmd = pline[pline.find(".") + 1 : pline.find("(")]
             if _cmd not in HBNBCommand.dot_cmds:
                 raise Exception
 
             # if parantheses contain arguments, parse them
-            pline = pline[pline.find("(") + 1:pline.find(")")]
+            pline = pline[pline.find("(") + 1 : pline.find(")")]
             if pline:
                 # partition args: (<id>, [<delim>], [<*args>])
                 pline = pline.partition(", ")  # pline convert to tuple
@@ -82,8 +83,8 @@ class HBNBCommand(cmd.Cmd):
                 if pline:
                     # check for *args or **kwargs
                     if (
-                        pline[0] is "{"
-                        and pline[-1] is "}"
+                        pline[0] == "{"
+                        and pline[-1] == "}"
                         and type(eval(pline)) is dict
                     ):
                         _args = pline
@@ -92,7 +93,7 @@ class HBNBCommand(cmd.Cmd):
                         # _args = _args.replace('\"', '')
             line = " ".join([_cmd, _cls, _id, _args])
 
-        except Exception as mess:
+        except Exception:
             pass
         finally:
             return line
@@ -152,7 +153,7 @@ class HBNBCommand(cmd.Cmd):
                 temp_value = value[1:-1]
 
                 # skips if value contain a space
-                if ' ' in temp_value:
+                if " " in temp_value:
                     continue
 
                 # Handle escaped quotes and underscores
@@ -327,19 +328,19 @@ class HBNBCommand(cmd.Cmd):
                 args.append(v)
         else:  # isolate args
             args = args[2]
-            if args and args[0] is '"':  # check for quoted arg
+            if args and args[0] == '"':  # check for quoted arg
                 second_quote = args.find('"', 1)
                 att_name = args[1:second_quote]
-                args = args[second_quote + 1:]
+                args = args[second_quote + 1 :]
 
             args = args.partition(" ")
 
             # if att_name was not quoted arg
-            if not att_name and args[0] is not " ":
+            if not att_name and args[0] != " ":
                 att_name = args[0]
             # check for quoted val arg
-            if args[2] and args[2][0] is '"':
-                att_val = args[2][1:args[2].find('"', 1)]
+            if args[2] and args[2][0] == '"':
+                att_val = args[2][1 : args[2].find('"', 1)]
 
             # if att_val was not quoted arg
             if not att_val and args[2]:

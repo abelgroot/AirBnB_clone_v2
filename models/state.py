@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+"""State Module for HBNB project."""
+
 from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
 
@@ -7,23 +10,29 @@ from models.city import City
 
 
 class State(BaseModel, Base):
-    """State class"""
+    """State class."""
 
     __tablename__ = "states"
     name = Column(String(128), nullable=False)
+    # if DBStorage is used, the relationship between State and City will be
+    # defined as state.cities and city.state
+    # if FileStorage is used, the relationship between State and City will be
+    # defined as state.cities and city.state_id
+    if models.storage_type == "db":
+        cities = relationship("City", backref="state", cascade="all, delete")
+    else:
+
+        @property
+        def cities(self):
+            """Getter attribute in case of file storage."""
+            cities = models.storage.all(City)
+            return [city for city in cities.values() if city.state_id == self.id]
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if models.storage_type == "db":
-            self.cities = relationship(
-                "City", back_populates="states", cascade="all, delete"
-            )
-
-    @property
-    def cities(self):
-        """getter attribute in case of file storage used."""
-        if models.storage_type != "db":
-            all_cities = models.storage.all(City)
-            return [city for city in all_cities.values() if city.state_id == self.id]
-        return []
+        """Init method."""
+        filtered_kwargs = {
+            k: v for k, v in kwargs.items() if hasattr(self, k) or k == "id"
+        }
+        super().__init__(*args, **filtered_kwargs)
+        self.name = kwargs.get("name", None)
 
