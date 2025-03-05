@@ -1,6 +1,3 @@
-#!/usr/bin/python3
-"""This module defines a new engine"""
-
 from os import getenv
 
 from sqlalchemy import create_engine
@@ -24,12 +21,9 @@ class DBStorage:
         host = getenv("HBNB_MYSQL_HOST")
         database = getenv("HBNB_MYSQL_DB")
         self.__engine = create_engine(
-            f"mysql+mysqldb://{user}:{password}@{host}/{database}",
-            pool_pre_ping=True
+            f"mysql+mysqldb://{user}:{password}@{host}/{database}", pool_pre_ping=True
         )
         if getenv("HBNB_ENV") == "test":
-            from models.base_model import Base
-
             Base.metadata.drop_all(self.__engine)
 
     def all(self, cls=None):
@@ -51,11 +45,11 @@ class DBStorage:
                 result[key] = obj
         else:
             classes = [User, State, City, Amenity, Place, Review]
-            for classes in classes:
-                objects = self.__session.query(classes).all()
-            for obj in objects:
-                key = f"{obj.__class__.__name__}.{obj.id}"
-                result[key] = obj
+            for class_obj in classes:
+                objects = self.__session.query(class_obj).all()
+                for obj in objects:
+                    key = f"{obj.__class__.__name__}.{obj.id}"
+                    result[key] = obj
         return result
 
     def new(self, obj):
@@ -73,18 +67,10 @@ class DBStorage:
 
     def reload(self):
         """reload the database"""
-
         Base.metadata.create_all(self.__engine)
-
-        session_factory = sessionmaker(bind=self.__engine,
-                                expire_on_commit=True
-                                )
+        session_factory = sessionmaker(bind=self.__engine, expire_on_commit=True)
         self.__session = scoped_session(session_factory)
 
-    def clse(self):
+    def close(self):
         """Close the session."""
         self.__session.close()
-
-
-if __name__ == "__main__":
-    all("State")
