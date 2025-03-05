@@ -26,7 +26,8 @@ class State(BaseModel, Base):
         def cities(self):
             """Getter attribute in case of file storage."""
             cities = models.storage.all(City)
-            return [city for city in cities.values() if city.state_id == self.id]
+            return [city for city in cities.values() if city.state_id ==
+                    self.id]
 
     def __init__(self, *args, **kwargs):
         """Init method."""
@@ -35,4 +36,3 @@ class State(BaseModel, Base):
         }
         super().__init__(*args, **filtered_kwargs)
         self.name = kwargs.get("name", None)
-

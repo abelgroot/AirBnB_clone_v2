@@ -30,7 +30,9 @@ class BaseModel:
         if kwargs:
             for k, v in kwargs.items():
                 if k == "created_at" or k == "updated_at":
-                    setattr(self, k, datetime.strptime(v, "%Y-%m-%dT%H:%M:%S.%f"))
+                    setattr(
+                        self, k, datetime.strptime(
+                            v, "%Y-%m-%dT%H:%M:%S.%f"))
                 elif k != "__class__":
                     setattr(self, k, v)
 
@@ -38,8 +40,8 @@ class BaseModel:
         """Return a string representation of the instance."""
         cls = (str(type(self)).split(".")[-1]).split("'")[0]
         filtered_dict = {
-            k: v for k, v in self.__dict__.copy().items() if k != "_sa_instance_state"
-        }
+            k: v for k,
+            v in self.__dict__.copy().items() if k != "_sa_instance_state"}
         return "[{}] ({}) {}".format(cls, self.id, filtered_dict)
 
     def save(self):
@@ -62,4 +64,3 @@ class BaseModel:
     def delete(self):
         """Delete the current instance from the storage."""
         models.storage.delete(self)
-
